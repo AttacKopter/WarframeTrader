@@ -20,7 +20,10 @@ def get_item_orders(item_url):
         print(success)
         return orders
     except:
-        errors[item_url] += 1
+        try:
+            errors[item_url] += 1
+        except:
+            errors[item_url] = 1
         print(success,end=' ')
         print(errors)
         return get_item_orders(item_url)
