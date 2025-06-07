@@ -10,20 +10,21 @@ def get_item_orders(item_url):
     online_mask = (orders['user.status'] != 'offline')
     buy_orders_mask = (orders['order_type'] == 'buy')
     sell_orders_mask = (orders['order_type'] == 'sell')
-    sell_orders = orders[online_mask][sell_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
-    buy_orders = orders[online_mask][buy_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
+    sell_orders = orders.loc[online_mask].loc[sell_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
+    buy_orders = orders.loc[online_mask].loc[buy_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
 
-    print(sell_orders)
 
     buy_count = buy_orders['quantity'].sum()
     buy_mean = buy_orders.apply(lambda x: x.platinum*x.quantity, axis=1).sum()/buy_count
     sell_count = sell_orders['quantity'].sum()
     sell_mean = sell_orders.apply(lambda x: x.platinum*x.quantity, axis=1).sum()/sell_count
+    print("sell orders\n",sell_orders)
+    print("sell mean",sell_mean)
+    print("sell count",sell_count)
 
-    print(sell_mean)
-    print(buy_mean)
-    print(sell_count)
-    print(buy_count)
+    print("buy orders\n",buy_orders)
+    print("buy mean",  buy_mean)
+    print("buy count",buy_count)
 
     return
 
