@@ -1,17 +1,33 @@
 import requests
 import json
-
+import os
 import pandas as pd
+from pandarallel import pandarallel
 
 debug = False
+global errors,success
+errors = {}
+success = 0
 def get_item_orders(item_url):
-    request_url = url + '/' + item_url + '/orders'
-    response = requests.get(request_url)
-    orders =  pd.json_normalize(response.json()['payload']['orders'])[['platinum','quantity','order_type','user.status']]
-    online_mask = (orders['user.status'] != 'offline')
+    global success,errors
+    url = 'https://api.warframe.market/v1/items'
+    try:
+        request_url = url + '/' + item_url + '/orders'
+        response = requests.get(request_url)
+        orders =  pd.json_normalize(response.json()['payload']['orders']).assign(name=item_url)
+        errors.pop(item_url,None)
+        success += 1
+        print(success)
+        return orders
+    except:
+        errors[item_url] += 1
+        print(success,end=' ')
+        print(errors)
+        return get_item_orders(item_url)
 
+def handle_data(orders):
     buy_orders_mask = (orders['order_type'] == 'buy') & (orders['quantity'] < 69) # real filter
-    buy_orders = orders.loc[online_mask].loc[buy_orders_mask].sort_values(by='platinum',ascending=False)[['platinum','quantity']]
+    buy_orders = orders.loc[buy_orders_mask].sort_values(by='platinum',ascending=False)[['platinum','quantity','creation_date']]
     buy_count = buy_orders['quantity'].sum()
     if buy_count == 0:
         return {}
@@ -28,8 +44,8 @@ def get_item_orders(item_url):
         print('buy count',buy_count)
         print('buy sd',buy_sd)
 
-    sell_orders_mask = (orders['order_type'] == 'sell') & (orders['quantity'] < 69) # real filter
-    sell_orders = orders.loc[online_mask].loc[sell_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
+    sell_orders_mask = (orders['order_type'] == 'sell') & (orders['quantity'] < 69) #Real filter
+    sell_orders = orders.loc[sell_orders_mask].sort_values(by='platinum')[['platinum','quantity','creation_date']]
     sell_count = sell_orders['quantity'].sum()
     if sell_count == 0:
         return {}
@@ -50,20 +66,22 @@ def get_item_orders(item_url):
     if debug:
         print('sell - buy',split)
     return_values =  {'buy mean':buy_mean,'buy count':buy_count,'sell mean':sell_mean,'sell count':sell_count,'split':split,'name':item_url}
-    print(return_values)
     return return_values
 
-try:
-    data = pd.read_csv('data.csv')
-except:
-    print('no csv')
+data_path = 'data.csv'
 
+if os.path.exists(data_path):
+    data = pd.read_csv('data.csv')
+else:
     url = 'https://api.warframe.market/v1/items'
+    print('no csv')
     response = requests.get(url)
     tradable_items = pd.json_normalize(response.json()['payload']['items'])
     item_urls = tradable_items['url_name']
 
     orders = []
-    data = pd.DataFrame(list(item_urls.apply(get_item_orders))).dropna()
+    pandarallel.initialize()
+    raw_data = item_urls.parallel_apply(get_item_orders)
+    data = pd.concat(list(raw_data))
     data.to_csv('data.csv',index=False)
-print(data)
+    print(data)
