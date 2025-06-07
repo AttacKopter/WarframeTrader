@@ -1,23 +1,15 @@
 import requests
 import json
 
-url = "https://api.warframe.market/v1/items"
-response = requests.get(url)
+import pandas as pd
 
-tradable_items = response.json()
-
-item_urls = []
-
-for item in tradable_items['payload']['items']:
-    item_urls.append(item['url_name'])
-    break
-
-buy_orders = []
-sell_orders = []
-
-for item_url in item_urls:
+def get_item_orders(item_url):
     request_url = url + "/" + item_url + "/orders"
-    responses = requests.get(request_url).json()['payload']['orders']
+    response = requests.get(request_url)
+    orders =  pd.json_normalize(response.json()['payload']['orders'])
+    online_mask = (orders['user.status'] != 'offline')
+    print(orders[online_mask].head())
+    return
     for response in responses:
         if response['visible'] == 'False':
             continue
@@ -60,3 +52,14 @@ for item_url in item_urls:
     print(buy_volume)
     print(sell_volume)
     print(item_url)
+
+url = "https://api.warframe.market/v1/items"
+response = requests.get(url)
+
+tradable_items = pd.json_normalize(response.json()['payload']['items'])
+
+item_urls = tradable_items['url_name']
+
+orders =[]
+item_urls.head().apply(get_item_orders)
+
