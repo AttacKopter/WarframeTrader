@@ -6,20 +6,16 @@ import pandas as pd
 def get_item_orders(item_url):
     request_url = url + "/" + item_url + "/orders"
     response = requests.get(request_url)
-    orders =  pd.json_normalize(response.json()['payload']['orders'])
+    orders =  pd.json_normalize(response.json()['payload']['orders'])[['platinum','quantity','order_type','user.status']]
     online_mask = (orders['user.status'] != 'offline')
-    print(orders[online_mask].head())
-    return
-    for response in responses:
-        if response['visible'] == 'False':
-            continue
-        elif response['order_type'] == 'buy':
-            buy_orders.append(response)
-        elif response['order_type'] == 'sell':
-            sell_orders.append(response)
+    buy_orders_mask = (orders['order_type'] == 'buy')
+    sell_orders_mask = (orders['order_type'] == 'sell')
+    sell_orders = orders[online_mask][sell_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
+    # buy_orders = orders[online_mask][buy_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
 
-    buy_orders = sorted(buy_orders, key=lambda d: d['platinum'])
-    sell_orders = sorted(sell_orders, key=lambda d: d['platinum'])
+    print(sell_orders)
+    return
+
 
     buy_mean = 0;
     sell_mean = 0;
@@ -61,5 +57,5 @@ tradable_items = pd.json_normalize(response.json()['payload']['items'])
 item_urls = tradable_items['url_name']
 
 orders =[]
-item_urls.head().apply(get_item_orders)
+get_item_orders( item_urls[0])#.apply(get_item_orders)
 
