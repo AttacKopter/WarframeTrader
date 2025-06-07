@@ -15,12 +15,16 @@ def get_item_orders(item_url):
     buy_count = buy_orders['quantity'].sum()
     buy_mean = buy_orders.apply(lambda x: x.platinum*x.quantity, axis=1).sum()/buy_count
     buy_sd = pow(buy_orders.apply(lambda x: pow(x.platinum*x.quantity - buy_mean,2),axis = 1).sum()/buy_count,0.5)
+    buy_outlier_mask = ((buy_orders['platinum'] > buy_mean - buy_sd * 3) & (buy_orders['platinum'] < buy_mean + buy_sd *3))
+    buy_orders = buy_orders.loc[buy_orders_mask]
 
     sell_orders_mask = (orders['order_type'] == 'sell')
     sell_orders = orders.loc[online_mask].loc[sell_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
     sell_count = sell_orders['quantity'].sum()
     sell_mean = sell_orders.apply(lambda x: x.platinum*x.quantity, axis=1).sum()/sell_count
     sell_sd = pow(sell_orders.apply(lambda x: pow(x.platinum*x.quantity - sell_mean,2),axis = 1).sum()/sell_count,0.5)
+    sell_outlier_mask = ((sell_orders['platinum'] > sell_mean - sell_sd * 3) & (sell_orders['platinum'] < sell_mean + sell_sd *3))
+    sell_orders = sell_orders.loc[sell_orders_mask]
     if debug:
         print("buy orders\n",buy_orders)
         print("buy mean",  buy_mean)
