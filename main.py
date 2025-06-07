@@ -11,22 +11,21 @@ def get_item_orders(item_url):
     buy_orders_mask = (orders['order_type'] == 'buy')
     sell_orders_mask = (orders['order_type'] == 'sell')
     sell_orders = orders[online_mask][sell_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
-    # buy_orders = orders[online_mask][buy_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
+    buy_orders = orders[online_mask][buy_orders_mask].sort_values(by='platinum')[['platinum','quantity']]
 
     print(sell_orders)
+
+    buy_count = buy_orders['quantity'].sum()
+    buy_mean = buy_orders.apply(lambda x: x['platinum']*x['quantity']).sum()/buy_count
+    sell_count = sell_orders['quantity'].sum()
+    sell_mean = sell_orders.apply(lambda x: x['platinum']*x['quantity']).sum()/sell_count
+
+    print(sell_mean)
+    print(buy_mean)
+    print(sell_count)
+    print(buy_count)
+
     return
-
-
-    buy_mean = 0;
-    sell_mean = 0;
-
-    for buy_order in buy_orders:
-        buy_mean = buy_mean + buy_order['platinum']
-    for sell_order in sell_orders:
-        sell_mean = sell_mean + sell_order['platinum']
-
-    buy_mean = buy_mean/len(buy_orders)
-    sell_mean = sell_mean/len(sell_orders)
 
     # Remove Outliers
 
@@ -56,6 +55,6 @@ tradable_items = pd.json_normalize(response.json()['payload']['items'])
 
 item_urls = tradable_items['url_name']
 
-orders =[]
+orders = []
 get_item_orders( item_urls[0])#.apply(get_item_orders)
 
