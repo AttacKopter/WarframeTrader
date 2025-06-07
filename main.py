@@ -16,9 +16,9 @@ def get_item_orders(item_url):
     print(sell_orders)
 
     buy_count = buy_orders['quantity'].sum()
-    buy_mean = buy_orders.apply(lambda x: x['platinum']*x['quantity']).sum()/buy_count
+    buy_mean = buy_orders.apply(lambda x: x.platinum*x.quantity, axis=1).sum()/buy_count
     sell_count = sell_orders['quantity'].sum()
-    sell_mean = sell_orders.apply(lambda x: x['platinum']*x['quantity']).sum()/sell_count
+    sell_mean = sell_orders.apply(lambda x: x.platinum*x.quantity, axis=1).sum()/sell_count
 
     print(sell_mean)
     print(buy_mean)
