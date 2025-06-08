@@ -17,7 +17,11 @@ def get_item_orders(item_url):
         orders =  pd.json_normalize(response.json()['payload']['orders']).assign(name=item_url)
         errors.pop(item_url,None)
         success += 1
+<<<<<<< HEAD
         print(success)
+=======
+        print(success,)
+>>>>>>> 79c337d (Made it make data well)
         return orders
     except:
         try:
@@ -72,19 +76,27 @@ def handle_data(orders):
     return return_values
 
 data_path = 'data.csv'
+item_path = 'items.csv'
+
+url = 'https://api.warframe.market/v1/items'
+response = requests.get(url)
+tradable_items = None
+if os.path.exists(item_path):
+    print('using saved items')
+    tradable_items = pd.read_csv(item_path)
+else:
+    print('no item csv')
+    tradable_items = pd.json_normalize(response.json()['payload']['items'])
+    tradable_items.to_csv(item_path,index=False)
 
 if os.path.exists(data_path):
+    print('using saved data')
     data = pd.read_csv('data.csv')
 else:
-    url = 'https://api.warframe.market/v1/items'
-    print('no csv')
-    response = requests.get(url)
-    tradable_items = pd.json_normalize(response.json()['payload']['items'])
+    print('no data csv')
     item_urls = tradable_items['url_name']
-
     orders = []
     pandarallel.initialize()
-    raw_data = item_urls.parallel_apply(get_item_orders)
+    raw_data = item_urls.head.parallel_apply(get_item_orders)
     data = pd.concat(list(raw_data))
-    data.to_csv('data.csv',index=False)
-    print(data)
+    data.to_csv(data_path,index=False)
