@@ -76,24 +76,6 @@ def handle_data(orders):
     return return_values
 
 data_path = 'data.csv'
-<<<<<<< HEAD
-
-if os.path.exists(data_path):
-    data = pd.read_csv('data.csv')
-else:
-    url = 'https://api.warframe.market/v1/items'
-    print('no csv')
-    response = requests.get(url)
-    tradable_items = pd.json_normalize(response.json()['payload']['items'])
-    item_urls = tradable_items['url_name']
-
-    orders = []
-    pandarallel.initialize()
-    raw_data = item_urls.parallel_apply(get_item_orders)
-    data = pd.concat(list(raw_data))
-    data.to_csv('data.csv',index=False)
-    print(data)
-=======
 item_path = 'items.csv'
 
 url = 'https://api.warframe.market/v1/items'
@@ -118,5 +100,3 @@ else:
     raw_data = item_urls.head.parallel_apply(get_item_orders)
     data = pd.concat(list(raw_data))
     data.to_csv(data_path,index=False)
-
->>>>>>> 79c337d (Made it make data well)
