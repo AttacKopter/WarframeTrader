@@ -17,11 +17,7 @@ def get_item_orders(item_url):
         orders =  pd.json_normalize(response.json()['payload']['orders']).assign(name=item_url)
         errors.pop(item_url,None)
         success += 1
-<<<<<<< HEAD
         print(success)
-=======
-        print(success,)
->>>>>>> 79c337d (Made it make data well)
         return orders
     except:
         try:
